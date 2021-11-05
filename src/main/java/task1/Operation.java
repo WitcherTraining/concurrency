@@ -1,3 +1,5 @@
+package task1;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +11,7 @@ public class Operation {
 
     ////// works with synchronized operational methods /////////
 //    private static Map<Integer, Integer> numbers = Collections.synchronizedMap(numbers1);
-//    private static Map<Integer, Integer> mySynchronizedMap = new SynchronizedHashMap<>(numbers1);
+//    private static Map<Integer, Integer> mySynchronizedMap = new task1.SynchronizedHashMap<>(numbers1);
 
     private static ConcurrentHashMap<Integer, Integer> numbers1 = new ConcurrentHashMap<>();
 

@@ -1,3 +1,4 @@
+package task1;
 
 public class Operator extends Thread {
     public void run() {

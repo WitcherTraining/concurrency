@@ -1,3 +1,5 @@
+package task1;
+
 public class Pusher extends Thread {
 
     public void run() {
