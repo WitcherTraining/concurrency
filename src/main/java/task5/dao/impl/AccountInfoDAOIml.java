@@ -59,7 +59,6 @@ public class AccountInfoDAOIml implements AccountInfoDAO {
     @Override
     public void updateAccount(Account account) {
         AccountValidator.verifyAccountExist(account.getUserName());
-        String propsFileName = account.getUserName().toLowerCase() + ResourceUtil.PROPERTIES_POSTFIX;
         ResourceUtil.updatePropertyFile(account);
     }
 
@@ -77,6 +76,17 @@ public class AccountInfoDAOIml implements AccountInfoDAO {
         String propsFileName = userName.toLowerCase() + ResourceUtil.PROPERTIES_POSTFIX;
         Properties accountProperties = ResourceUtil.loadProperties(propsFileName);
 
+        setCurrencyValue(currency, amount, accountProperties);
+
+        try {
+            accountProperties.store(new FileOutputStream(ResourceUtil.PATH_PREFIX + propsFileName), null);
+        } catch (IOException e) {
+            LogUtil.logRegularExceptions(AccountInfoDAOIml.class.getName(), e);
+        }
+
+    }
+
+    private void setCurrencyValue(Currency currency, BigDecimal amount, Properties accountProperties) {
         switch (currency) {
             case KZT:
                 accountProperties.setProperty(ResourceUtil.KZT_CURRENCY_AMOUNT, String.valueOf(amount));
@@ -91,12 +101,5 @@ public class AccountInfoDAOIml implements AccountInfoDAO {
                 throw new CurrencyNotFoundException(LogUtil.logBusinessException(AccountInfoDAOIml.class.getName(),
                         "Currency with such name not found: " + currency));
         }
-
-        try {
-            accountProperties.store(new FileOutputStream(ResourceUtil.PATH_PREFIX + propsFileName), null);
-        } catch (IOException e) {
-            LogUtil.logRegularExceptions(AccountInfoDAOIml.class.getName(), e);
-        }
-
     }
 }

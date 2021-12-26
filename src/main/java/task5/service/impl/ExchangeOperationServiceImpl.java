@@ -31,43 +31,11 @@ public class ExchangeOperationServiceImpl implements ExchangeOperationService {
         BigDecimal newValueTo;
         BalanceValidator.checkBalanceNotZero(account, zero);
 
-        switch (fromCurrency) {
-            case USD:
-                BigDecimal amountUsdOnAcc = account.getUsdCurrencyAmount();
-                BalanceValidator.checkAmountOnAccount(amountUsdOnAcc, convertingAmount);
-                account.setUsdCurrencyAmount(amountUsdOnAcc.subtract(convertingAmount));
-                break;
-            case KZT:
-                BigDecimal amountKztOnAcc = account.getKztCurrencyAmount();
-                BalanceValidator.checkAmountOnAccount(amountKztOnAcc, convertingAmount);
-                account.setKztCurrencyAmount(amountKztOnAcc.subtract(convertingAmount));
-                break;
-            case RUB:
-                BigDecimal amountRubOnAcc = account.getRubCurrencyAmount();
-                BalanceValidator.checkAmountOnAccount(amountRubOnAcc, convertingAmount);
-                account.setRubCurrencyAmount(amountRubOnAcc.subtract(convertingAmount));
-                break;
-            default:
-                throw new CurrencyNotFoundException(LogUtil.logBusinessException(ExchangeOperationServiceImpl.class.getName(),
-                        "Currency with such name not found: " + fromCurrency));
-        }
+        setAppropriatedCurrencyFrom(account, fromCurrency, convertingAmount);
 
         newValueTo = this.convertCurrencies(fromCurrency, toCurrency, convertingAmount);
 
-        switch (toCurrency) {
-            case USD:
-                account.setUsdCurrencyAmount(account.getUsdCurrencyAmount().add(newValueTo));
-                break;
-            case KZT:
-                account.setKztCurrencyAmount(account.getKztCurrencyAmount().add(newValueTo));
-                break;
-            case RUB:
-                account.setRubCurrencyAmount(account.getRubCurrencyAmount().add(newValueTo));
-                break;
-            default:
-                throw new CurrencyNotFoundException(LogUtil.logBusinessException(ExchangeOperationServiceImpl.class.getName(),
-                        "Currency with such name not found: " + toCurrency));
-        }
+        setAppropriatedCurrencyTo(account, toCurrency, newValueTo);
 
         ResourceUtil.updatePropertyFile(account);
 
@@ -91,6 +59,10 @@ public class ExchangeOperationServiceImpl implements ExchangeOperationService {
         LogUtil.logInfo(ExchangeOperationServiceImpl.class.getName(),
                 String.format("Converting from [%s] to [%s] currency...", fromCurrency.name(), toCurrency.name()));
 
+        return getConvertedValue(fromCurrency, toCurrency, moneyAmount, exchangeRate);
+    }
+
+    private BigDecimal getConvertedValue(Currency fromCurrency, Currency toCurrency, BigDecimal moneyAmount, ExchangeRate exchangeRate) {
         switch (fromCurrency) {
             case USD:
                 BalanceValidator.checkOperationRule(toCurrency);
@@ -105,6 +77,46 @@ public class ExchangeOperationServiceImpl implements ExchangeOperationService {
                     case RUB:
                         return moneyAmount.divide(exchangeRate.getRubKztExchangeRate(), RoundingMode.DOWN);
                 }
+            default:
+                throw new CurrencyNotFoundException(LogUtil.logBusinessException(ExchangeOperationServiceImpl.class.getName(),
+                        "Currency with such name not found: " + fromCurrency));
+        }
+    }
+
+    private void setAppropriatedCurrencyTo(Account account, Currency toCurrency, BigDecimal newValueTo) {
+        switch (toCurrency) {
+            case USD:
+                account.setUsdCurrencyAmount(account.getUsdCurrencyAmount().add(newValueTo));
+                break;
+            case KZT:
+                account.setKztCurrencyAmount(account.getKztCurrencyAmount().add(newValueTo));
+                break;
+            case RUB:
+                account.setRubCurrencyAmount(account.getRubCurrencyAmount().add(newValueTo));
+                break;
+            default:
+                throw new CurrencyNotFoundException(LogUtil.logBusinessException(ExchangeOperationServiceImpl.class.getName(),
+                        "Currency with such name not found: " + toCurrency));
+        }
+    }
+
+    private void setAppropriatedCurrencyFrom(Account account, Currency fromCurrency, BigDecimal convertingAmount) {
+        switch (fromCurrency) {
+            case USD:
+                BigDecimal amountUsdOnAcc = account.getUsdCurrencyAmount();
+                BalanceValidator.checkAmountOnAccount(amountUsdOnAcc, convertingAmount);
+                account.setUsdCurrencyAmount(amountUsdOnAcc.subtract(convertingAmount));
+                break;
+            case KZT:
+                BigDecimal amountKztOnAcc = account.getKztCurrencyAmount();
+                BalanceValidator.checkAmountOnAccount(amountKztOnAcc, convertingAmount);
+                account.setKztCurrencyAmount(amountKztOnAcc.subtract(convertingAmount));
+                break;
+            case RUB:
+                BigDecimal amountRubOnAcc = account.getRubCurrencyAmount();
+                BalanceValidator.checkAmountOnAccount(amountRubOnAcc, convertingAmount);
+                account.setRubCurrencyAmount(amountRubOnAcc.subtract(convertingAmount));
+                break;
             default:
                 throw new CurrencyNotFoundException(LogUtil.logBusinessException(ExchangeOperationServiceImpl.class.getName(),
                         "Currency with such name not found: " + fromCurrency));
